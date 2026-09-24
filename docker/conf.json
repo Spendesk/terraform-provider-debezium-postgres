@@ -1,0 +1,5 @@
+{
+  "db_connection": "host=debezium port=5432 user=postgres password=password dbname=products sslmode=disable",
+  "bind_address": "0.0.0.0:8080",
+  "metrics_address": "localhost:8080"
+}

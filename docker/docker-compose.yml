@@ -1,0 +1,79 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
+## Development infrastructure for running and testing the Debezium UI
+version: '3'
+services:
+  dbzui-zookeeper:
+    container_name: dbzui-zookeeper
+    image: debezium/zookeeper:1.8
+    networks:
+      - dbzui-network
+  dbzui-kafka:
+    container_name: dbzui-kafka
+    image: debezium/kafka:1.9.5.Final
+    ports:
+      - "9092:9092"
+    depends_on:
+      - dbzui-zookeeper
+    environment:
+      - ZOOKEEPER_CONNECT=dbzui-zookeeper:2181
+    networks:
+      - dbzui-network
+  dbzui-kafka-ui:
+    container_name: dbzui-kafka-ui
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - "8181:8080"
+    depends_on:
+      - dbzui-kafka
+      - dbzui-connect
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: dbzui-kafka:9092
+      KAFKA_CLUSTERS_0_KAFKACONNECT_0_NAME: local
+      KAFKA_CLUSTERS_0_KAFKACONNECT_0_ADDRESS: http://dbzui-connect:8083
+      DYNAMIC_CONFIG_ENABLED: 'true'
+    networks:
+      - dbzui-network
+  dbzui-db-pg:
+    container_name: dbzui-db-pg
+    image: debezium/example-postgres:1.8
+    ports:
+      - "65432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    networks:
+      - dbzui-network
+  dbzui-connect:
+    container_name: dbzui-connect
+    image: debezium/connect:1.9.5.Final
+    ports:
+      - "8083:8083"
+    depends_on:
+      - dbzui-kafka
+      - dbzui-db-pg
+    environment:
+      - BOOTSTRAP_SERVERS=dbzui-kafka:9092
+      - GROUP_ID=1
+      - CONFIG_STORAGE_TOPIC=my_connect_configs
+      - OFFSET_STORAGE_TOPIC=my_connect_offsets
+      - STATUS_STORAGE_TOPIC=my_connect_statuses
+      - ENABLE_DEBEZIUM_SCRIPTING=true
+    networks:
+      - dbzui-network
+  dbzui-backend:
+    container_name: dbzui-backend
+    image: debezium/debezium-ui:1.9.5.Final
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_CONNECT_URIS: http://dbzui-connect:8083
+    depends_on:
+      - dbzui-connect
+    networks:
+      - dbzui-network
+networks:
+  dbzui-network:
+    external: false
