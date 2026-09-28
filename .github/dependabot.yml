@@ -8,6 +8,13 @@ updates:
     schedule:
       # Check for updates to Go modules every weekday
       interval: "daily"
+    groups:
+      # terraform-plugin-framework/-go/-testing/-sdk share the tfprotov5/tfprotov6 wire
+      # protocol interfaces and must move together, or the build breaks with interface
+      # satisfaction errors (e.g. framework bumped without testing -> sdk/v2 mismatch).
+      terraform-plugin:
+        patterns:
+          - "github.com/hashicorp/terraform-plugin-*"
   - package-ecosystem: "gomod"
     directory: "/tools"
     schedule:
