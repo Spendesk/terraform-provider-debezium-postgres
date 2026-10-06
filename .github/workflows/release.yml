@@ -13,10 +13,6 @@ on:
 permissions:
   contents: write
 
-env:
-  # See test.yml: lets Go auto-download a newer toolchain when a dependency requires one.
-  GOTOOLCHAIN: auto
-
 jobs:
   goreleaser:
     runs-on:
@@ -31,6 +27,8 @@ jobs:
         with:
           go-version-file: 'go.mod'
           cache: true
+      # See test.yml: setup-go pins GOTOOLCHAIN=local for later steps, so re-enable auto.
+      - run: echo "GOTOOLCHAIN=auto" >> "$GITHUB_ENV"
       - name: Import GPG key
         uses: crazy-max/ghaction-import-gpg@2dc316deee8e90f13e1a351ab510b4d5bc0c82cd # v7.0.0
         id: import_gpg
