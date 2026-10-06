@@ -13,6 +13,10 @@ on:
 permissions:
   contents: write
 
+env:
+  # See test.yml: lets Go auto-download a newer toolchain when a dependency requires one.
+  GOTOOLCHAIN: auto
+
 jobs:
   goreleaser:
     runs-on:

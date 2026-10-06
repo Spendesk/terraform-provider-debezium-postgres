@@ -15,6 +15,13 @@ on:
 permissions:
   contents: read
 
+env:
+  # actions/setup-go pins GOTOOLCHAIN=local, which blocks Go from auto-downloading a
+  # newer toolchain when a dependency's go.mod requires one (e.g. terraform-plugin-framework
+  # bumping its own `go` directive). auto lets dependency bumps "just work" without us having
+  # to chase go.mod versions on every Dependabot PR.
+  GOTOOLCHAIN: auto
+
 jobs:
   # Ensure project builds before running testing matrix
   build:
