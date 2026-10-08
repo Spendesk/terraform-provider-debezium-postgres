@@ -1,0 +1,43 @@
+# Auto-merges Dependabot PRs that are patch/minor bumps once their own CI run (the "Tests"
+# workflow) is green. Major bumps are left alone and always need a human to review/merge,
+# since those are the ones most likely to need a real fix (e.g. the terraform-plugin-framework
+# 1.19.0 bump that required a CI fix before it could merge safely).
+#
+# pull_request_target (not pull_request) is required: GitHub gives GITHUB_TOKEN read-only
+# permissions on pull_request events triggered by Dependabot, regardless of the `permissions:`
+# block below. pull_request_target runs with the base repo's workflow and full token
+# permissions instead. It's safe here because this workflow never checks out the PR's code.
+on:
+  pull_request_target:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    if: github.actor == 'dependabot[bot]'
+    runs-on:
+      - runs-on=${{ github.run_id }}
+      - runner=spendesk-2-8
+    timeout-minutes: 20
+    steps:
+      - name: Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Approve
+        if: steps.metadata.outputs.update-type != 'version-update:semver-major'
+        run: gh pr review --approve "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Wait for the PR's own CI run, then merge
+        if: steps.metadata.outputs.update-type != 'version-update:semver-major'
+        run: |
+          gh pr checks "$PR_URL" --watch --fail-fast
+          gh pr merge --squash --delete-branch "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
