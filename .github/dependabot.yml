@@ -6,8 +6,8 @@ updates:
   - package-ecosystem: "gomod"
     directory: "/"
     schedule:
-      # Check for updates to Go modules every weekday
-      interval: "daily"
+      interval: "weekly"
+    open-pull-requests-limit: 5
     groups:
       # terraform-plugin-framework/-go/-testing/-sdk share the tfprotov5/tfprotov6 wire
       # protocol interfaces and must move together, or the build breaks with interface
@@ -15,11 +15,35 @@ updates:
       terraform-plugin:
         patterns:
           - "github.com/hashicorp/terraform-plugin-*"
+      # Everything else: bundle minor/patch bumps into one PR so they don't pile up.
+      # Majors are left out (and therefore opened individually) since they're the ones
+      # most likely to need a real fix, same as the auto-merge workflow's cutoff.
+      go-dependencies:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "github.com/hashicorp/terraform-plugin-*"
+        update-types:
+          - "minor"
+          - "patch"
   - package-ecosystem: "gomod"
     directory: "/tools"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      tools-dependencies:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      github-actions:
+        patterns:
+          - "*"
