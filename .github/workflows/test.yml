@@ -19,9 +19,10 @@ jobs:
   # Ensure project builds before running testing matrix
   build:
     name: Build
-    runs-on:
-      - runs-on=${{ github.run_id }}
-      - runner=spendesk-2-8
+    # GitHub-hosted: this job runs on every PR, including from forks, and a GitHub-hosted
+    # runner has no access to our internal network or IAM, unlike our dedicated self-hosted
+    # runners. It can still reach the public internet like any other CI runner.
+    runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -42,9 +43,7 @@ jobs:
           version: latest
 
   generate:
-    runs-on:
-      - runs-on=${{ github.run_id }}
-      - runner=spendesk-2-8
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
@@ -66,9 +65,7 @@ jobs:
   test:
     name: 'Acceptance Tests: Terraform ${{ matrix.terraform }}'
     needs: build
-    runs-on:
-      - runs-on=${{ github.run_id }}
-      - runner=spendesk-2-8
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
       fail-fast: false
