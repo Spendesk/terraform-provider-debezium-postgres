@@ -606,7 +606,7 @@ var scramJaasConfigPattern = regexp.MustCompile(`username="((?:[^"\\]|\\.)*)"\s+
 func parseScramJaasConfig(jaas string) (username, password string, err error) {
 	m := scramJaasConfigPattern.FindStringSubmatch(jaas)
 	if m == nil {
-		return "", "", fmt.Errorf("could not parse SASL/SCRAM JAAS config %q", jaas)
+		return "", "", fmt.Errorf("could not parse SASL/SCRAM JAAS config: does not match expected username/password format")
 	}
 
 	unescape := func(s string) string { return strings.ReplaceAll(s, `\"`, `"`) }
